@@ -1,53 +1,62 @@
 package ru.pobochnaya.springcourse.dao;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.pobochnaya.springcourse.models.Person;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Transactional
 public class PersonDAO {
 
+    @Autowired
+    private SessionFactory sessionFactory;
 
+    //@Transactional
     public List<Person> index() {
-        List<Person> people = new ArrayList<>();
-        try (Statement statement = connection.createStatement()) {
-            String sql = "select * from Person";
-            ResultSet resultSet = statement.executeQuery(sql);
+        Session session = sessionFactory.getCurrentSession();
 
-            while (resultSet.next()) {
-                Person person = new Person();
-                person.setId(resultSet.getInt("id"));
-                person.setName(resultSet.getString("name"));
-                person.setEmail(resultSet.getString("email"));
-                person.setAge(resultSet.getInt("age"));
-
-                people.add(person);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return people;
+        List<Person> fromPeople = session.createQuery("select p from Person p", Person.class).getResultList();
+        return fromPeople;
     }
 
+    @Transactional(readOnly = true)
     public Person show(int id) {
-        return null;//people.stream().filter(person -> person.getId() == id).findAny().orElse(null);
+        Session session = sessionFactory.getCurrentSession();
+
+        return session.get(Person.class, id);
+        //Person person = session.createQuery("select p from Person p where p.id = :id", Person.class).setParameter("id", id).getSingleResultOrNull();
+        //return person; //people.stream().filter(person -> person.getId() == id).findAny().orElse(null);
     }
+
 
     public void save(Person person) {
-        //people.add(person);
+        Session session = sessionFactory.getCurrentSession();
+
+        session.persist(person);
     }
 
     public void update(int id, Person person) {
-        Person person1 = show(id);
-        person1.setName(person.getName());
+        Session session = sessionFactory.getCurrentSession();
+
+        Person getPerson = session.createQuery("select p from Person p where p.id = :id", Person.class).setParameter("id", id).getSingleResult();
+
+        if(person.getName() != null) getPerson.setName(person.getName());
+        if(person.getAge() != null) getPerson.setAge(person.getAge());
+
+        session.update(getPerson);
     }
 
     public void delete(int id) {
+        Session session = sessionFactory.getCurrentSession();
+
+        Person getPerson = session.createQuery("select p from Person p where p.id = :id", Person.class).setParameter("id", id).getSingleResult();
+
+        session.delete(getPerson);
         //people.removeIf(person -> person.getId() == id);
     }
 }
