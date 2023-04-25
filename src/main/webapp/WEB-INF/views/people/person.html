@@ -6,9 +6,17 @@
 </head>
 <body>
 
-  <p th:text="${person.getName()}">1</p>
-  <p th:text="${person.getId()}">2</p>
+    <p th:text="${person.getId()}">2</p>
+    <p th:text="${person.getName()}">1</p>
+    <p th:text="${person.getEmail()}">3</p>
+    <p th:text="${person.getDateOfBirth()}">4</p>
+    <p th:text="${person.getMood()}">5</p>
   </br>
+
+  <p>Tovari</p>
+  <div th:each="item : ${items}">
+    <p th:text="${item.getName}">name</p>
+  </div>
 
   <form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
       <input type="submit" value="Delete!"/>
