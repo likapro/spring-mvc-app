@@ -7,10 +7,19 @@
 <body>
 
     <div th:each="person : ${people}">
+        <span th:text="${person.getId}"></span>
         <a th:href="@{people/{id}(id=${person.getId()})}" th:text="${person.getName()}">user</a>
     </div>
 
     <a th:href="@{people/new}">Create new person</a>
 
+    </br>
+    </br>
+    </br>
+
+    <div th:each="person : ${peopleOrder}">
+        <span th:text="${person.getId}"></span>
+        <a th:href="@{people/{id}(id=${person.getId()})}" th:text="${person.getName()}">user</a>
+    </div>
 </body>
 </html>

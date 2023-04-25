@@ -7,9 +7,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -27,6 +31,7 @@ import java.util.Properties;
 @ComponentScan("ru.pobochnaya.springcourse")
 @PropertySource("classpath:hibernate.properties")
 @EnableTransactionManagement
+@EnableJpaRepositories("ru.pobochnaya.springcourse.repositories")
 @EnableWebMvc
 public class SpringConfig implements WebMvcConfigurer {
 
@@ -64,7 +69,6 @@ public class SpringConfig implements WebMvcConfigurer {
 
     @Bean
     public DataSource dataSource() {
-        System.out.println("В методе датасоурс");
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
         dataSource.setDriverClassName(environment.getRequiredProperty("hibernate.driver_class"));
@@ -75,17 +79,15 @@ public class SpringConfig implements WebMvcConfigurer {
         return dataSource;
     }
 
-    @Bean
-    public LocalSessionFactoryBean sessionFactory() {
-        System.out.println("В методе сессионфактори");
-        LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
-        factoryBean.setDataSource(dataSource());
-        System.out.println("Выщли из датасоурс");
-        factoryBean.setPackagesToScan("ru.pobochnaya.springcourse.models");
-        factoryBean.setHibernateProperties(hibernateProperties());
-
-        return factoryBean;
-    }
+//    @Bean
+//    public LocalSessionFactoryBean sessionFactory() {
+//        LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
+//        factoryBean.setDataSource(dataSource());
+//        factoryBean.setPackagesToScan("ru.pobochnaya.springcourse.models");
+//        factoryBean.setHibernateProperties(hibernateProperties());
+//
+//        return factoryBean;
+//    }
 
     private Properties hibernateProperties() {
         Properties properties = new Properties();
@@ -95,10 +97,31 @@ public class SpringConfig implements WebMvcConfigurer {
         return properties;
     }
 
+//    @Bean
+//    public PlatformTransactionManager hibernateTransactionManager() {
+//        HibernateTransactionManager manager = new HibernateTransactionManager();
+//        manager.setSessionFactory(sessionFactory().getObject());
+//
+//        return manager;
+//    }
+
     @Bean
-    public PlatformTransactionManager hibernateTransactionManager() {
-        HibernateTransactionManager manager = new HibernateTransactionManager();
-        manager.setSessionFactory(sessionFactory().getObject());
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        LocalContainerEntityManagerFactoryBean managerFactory = new LocalContainerEntityManagerFactoryBean();
+        managerFactory.setDataSource(dataSource());
+        managerFactory.setPackagesToScan("ru.pobochnaya.springcourse.models");
+
+        HibernateJpaVendorAdapter jpaVendorAdapter = new HibernateJpaVendorAdapter();
+        managerFactory.setJpaVendorAdapter(jpaVendorAdapter);
+        managerFactory.setJpaProperties(hibernateProperties());
+
+        return managerFactory;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        JpaTransactionManager manager = new JpaTransactionManager();
+        manager.setEntityManagerFactory(entityManagerFactory().getObject());
 
         return manager;
     }
